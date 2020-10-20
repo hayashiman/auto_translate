@@ -1,0 +1,363 @@
+ Maruyama and Matsuzaki
+RESEARCH
+DegSampler: An improved Gibbs sampling strategy for predicting E3 binding sites Osamu Maruyama1* and Fumiko Matsuzaki2
+Abstract
+Background: The ubiquitin-proteasome system is a mechanism in eukaryotic cells for degrading polyubiquitin-tagged proteins through the proteasomal machinery to control numerous cellular processes and maintain intracellular homeostasis. In this system, the E3 ubiquitin ligase (hereinafter E3) plays an important role of selectively recognizing and binding speciﬁc regions of its substrate proteins. The relationship between substrate proteins and the sites at which they bind to E3s is not yet clear. Therefore, we need to computationally identify such sites from the substrate proteins of E3s. For this motif identiﬁcation, we proposed Degron Sampler 1 (DegSampler1), a collapsed Gibbs sampling algorithm using position-speciﬁc prior information.
+Results: In this research, we proposed a new collapsed Gibbs sampling algorithm called DegSampler (Degron Sampler) by designing a new position-speciﬁc prior probability distribution and sampling strategies, especially the updating of motif columns.Conclusions: We have shown that in the computational experiments, DegSampler achieved a 17% higher F-measure value than DegSampler1.
+This proves the importance of the design of the position-speciﬁc prior probability distribution and the sampling strategy of the Gibbs sampling algorithms.
+Keywords: motif; substrate protein; E3 ubiquitin ligase; posterior; alphabet indexing; disorder; collapsed; Gibbs sampling; DegSampler
+*Correspondence: maruyama@design.kyushu-u.ac.jp 1Faculty of Design, Kyushu University, Shiobaru, Minami-ku, Fukuoka, Japan Full list of author information is available at the end of the article
+Background Eukaryotic cells have two major pathways for degrading proteins for controlling cellular processes and maintaining intracellular homeostasis. One pathway is autophagy, a catabolic process that delivers intracellular components to the lysosome or the vacuole. The other pathway is the ubiquitin-proteasome system, which is a mechanism for degrading polyubiquitintagged proteins through the proteasomal machinery [1]. In the ubiquitin-proteasome system, an E3 ubiquitin ligase (hereinafter E3) selectively recognizes and binds speciﬁc regions of its target proteins, called substrate proteins. The characteristic representations compiled from the protein sequences of such regions bound by the same E3 protein are called sequence motifs, especially degrons for the E3 binding sites.It is important to identify which E3s and substrate proteins interact with one another to characterize various cellular mechanisms. Data on known degrons have been accumulated in the eukaryotic linear motif (ELM) resource for the functional sites in proteins [2].
+Degrons are grouped into the class called “DEG” in the database. In addition, in the E3Net database [3], the data on the relationships between E3s and their associated substrate proteins have been compiled. To date, of the 837 such substrate proteins that have been identiﬁed, only 55 substrate proteins are annotated with DEG motifs. In other words, 93% of the 837 known substrates are not annotated with any degrons. This indicates the need to ﬁnd degrons of the substrate proteins bound by particular E3s.
+In literature many sequence motif ﬁnders have been presented, such as Multiple EM for Motif Elicitation (MEME) [4], Gibbs Motif Sampler [5], and Gapped Local Alignment of Motifs (GLAM2) [6]. MEME is a popular PSSM (Position-speciﬁc scoring matrix) ﬁnding method based on expectation-maximization (EM) (see http://meme-suite.org/index.html). Gibbs Motif Sampler and GLAM2 are the Gibbs sampling-based methods. One way of further improving the motif ﬁnding is to exploit the prior information on the sequence positions. Narlikar and colleagues proposed a Gibbs sampling-based method called PRIORITY, and they showed the eﬀectiveness of the position-speciﬁc priorMaruyama and Matsuzaki
+Page 2 of 13
+information for the motif discovery of deoxyribonucleic acid (DNA) [7]. In general, prior information can be easily integrated into the posterior probability distribution of motifs by representing it as a prior probability distribution. Inspired by their success, Bailey and colleagues extended the EM-based MEME algorithm to use position-speciﬁc priors and reported their eﬀectiveness for identifying the transcription factor binding sites in yeast and mouse DNA sequences [8].
+However, to our best knowledge, there is no work in which position-speciﬁc prior information is integrated in Gibbs sampling algorithms in sequence motif ﬁnding. Thus, we in this paper propose a Gibbs samplingbased method called DegSampler (Degron Sampler) to identify the locations of motif occurrences of a given set of substrate protein sequences bound by an E3.
+One of the features of this method is to exploit the degree of disorderness of each residue of a protein sequence as position-speciﬁc prior information for motif occurrences. This approach is based on the observation that the E3 binding sites of the substrate proteins are often located within the disordered regions of the protein structure [9, 10].Furthermore, there are several prediction tools for disorder-to-order binding regions in disordered proteins, including ANCHOR1[11, 12], MoRFpred [13], MFSPSSMpred [14], and DISOPRED3 [15]. Typically, the output of them is the probability of each residue being in a disorder-to-order binding region. These probabilities are expected to work better than disorderness as position-speciﬁc prior information in identifying the locations of motif occurrences.
+In addition to the feature of the exploitation of position-speciﬁc prior, there are the following important features in DegSampler.
+• A fragmentation motif means a consequtive pattern of width W such that some speciﬁed internal positions within the whole pattern that are evaluated as part of motif, and the remainings are done as the background model. It is assumed that both end positions are always included in the motif model. DegSampler adopted this fragmentation motif model and optimizes the number of such selected positions within a found motif.• Furthermore, DegSampler can also optimize the
+width of a motif in fragmentation model.
+• The OOPS (one occurrence per sequence) [16] and ZOOPS (zero or one occurrence per sequence) [17] are motif occurrence models. Both are available in DegSampler.
+• The posterior probability distribution was also parameterized using a temperature parameter. As a result, simulated annealing was applicable in DegSampler.
+We evaluate how eﬃcient position-speciﬁc prior information related to disorderness of amino acid residues is in ﬁnding degrons. We also compare the performance of DegSampler with those of other popular tools on real data sets. We found that DegSampler drastically outperforms the others.
+Materials Sequence data sets and known motifs The E3Net database [3] identiﬁed 491 E3 ubiquitin ligases (E3s) associated with some known substrate proteins. In this research, we choosed all E3s with three or more known substrate proteins. As a result, we have obtained 123 such E3s, which were associated with 837 diﬀerent substrate proteins from six species: Homo sapiens (human), S. cerevisiae (yeast), Arabidopsis thaliana (mouse-ear cress), Mus musculus (mouse), Rattus norvegicus (rat), and Drosophila melanogaster (fruit ﬂy), and the three viruses, human herpesvirus 1 (HHV11), human papillomavirus type 16 (HPV16), and human herpesvirus 8 type P (HHV8P).The number of substrates assigned to an E3 averages 8.5.
+ELM is a database of short eukaryotic linear motifs that are manually curated from the literature; this includes 3,026 experimentally validated motif occurrences on 1,886 proteins. These linear motifs are grouped into six functional classes: cleavage (CLV) sites, degradation (DEG) sites, docking (DOC) sites, ligand (LIG) binding sites post-translational modiﬁcation (MOD) sites, and targeting (TRG) sites. The DEG class motifs are equivalent to degrons. Thus, the output of the motif ﬁnders was evaluated by using these DEG motifs. This class has 25 motifs, as shown in Table 1. As seen, some of the motifs looks too short to be predicted. Furthermore, only 36 E3s among the 123 E3s in the E3Net database include at least one substrate that is annotated with a DEG motif in ELM (human 29; yeast 3; mouse-ear cress 1; mouse 1; rat 0; fruit ﬂy 0; HHV11 1; HPV16 1; and HHV8P 0).
+Namely, the remaining 87 E3s have no DEG motif annotation on the substrate proteins. Then we used these 36 E3-speciﬁc sets of substrate proteins as the input for the motif ﬁnders to evaluate performance of DegSampler.Although E3Net has 837 E3-speciﬁc substrates, only 199 substrates are annotated with some ELM motifs, furthermore, only 55 substrates are annotated with the DEG motifs. In other words, 93% of the 837 substrates were not annotated with any DEG motif. Therefore, the motif occurrences predicted by reliable motif ﬁnders are good candidates for the degradation of functional regions, especially degrons.
+Maruyama and Matsuzaki
+Page 3 of 13
+Table 1 DEG motifs in the ELM database. The “RegEx” column gives the regular expression representation of DEG motifs. The “Instances” column shows the number of known substrate proteins.
+ELM Identiﬁer DEG APCC DBOX 1 DEG APCC KENBOX 2 DEG APCC TPR 1 DEG COP1 1 DEG CRL4 CDT2 1 DEG CRL4 CDT2 2 DEG Kelch actinﬁlin 1 DEG Kelch Keap1 1 DEG Kelch Keap1 2 DEG Kelch KLHL3 1 DEG MDM2 SWIB 1 DEG Nend Nbox 1 DEG Nend UBRbox 1 DEG Nend UBRbox 2 DEG Nend UBRbox 3 DEG Nend UBRbox 4 DEG ODPH VHL 1 DEG SCF COI1 1 DEG SCF FBW7 1 DEG SCF FBW7 2 DEG SCF SKP2-CKS1 1 DEG SCF TIR1 1 DEG SCF TRCP1 1 DEG SIAH 1 DEG SPOP SBC 1RegEx .R..L..[LIVM].
+.KEN.
+.[ILM]R$ [STDE]1,3.0,2[TSDE].2,3VP[STDE]G0,1[FLIMVYPA] [NQ]0,1..[ILMV][ST][DEN][FY][FY].2,3[KR]2,3[ˆDE] [NQ]0,1..[ILMV]T[DEN][HMFY][FMY].2,3[KR]2,3[ˆDE] [AP]P[MV][IM]V [DNS].[DES][TNS]GE QD.DLGV E.EE.E[AV]DQH F[ˆP]3W[ˆP]2,3[VIL] ˆM0,1[FYLIW][ˆP] ˆM0,1[RK][ˆP].
+ˆM0,1([ED]).
+ˆM0,1([NQ]).
+ˆM0,1(C).
+[IL]A(P).6,8[FLIVM].[FLIVM] ..[RK][RK].SL..F[FLM].[RK]R[HRK].[RK].
+[LIVMP].0,2(T)P..([ST]) [LIVMP].0,2(T)P..E ..[DE].(T)P.K .[VLIA][VLI]GWPP[VLI]...R.
+D(S)G.2,3([ST]) .P.A.V.P[ˆP] [AVP].[ST][ST][ST]
+Instances
+Source of position-speciﬁc prior information
+We here describe the source of the position-speciﬁc prior information used in this work. We prepare a position-speciﬁc prior derived from IUPred2 [18], which provides the probability of each residue belonging to a disordered region. IUPred2 has three prediction types, ”short disorder”, ”long disorder”, and ”structured domain.” Thus, we have chosen the short and long disorder types. Those outputs are denoted by IUPred2-short and IUPred2-long.Concerning the prior information on disorder-toorder binding regions of protein sequences, we use three prediction tools, ANCHOR [11], which we hereafter call ANCHOR1 to distinguish it from the successor ANCHOR2, ANCHOR2 [18], and fMoRFpred [19]. ANCHOR1 is a biophysics based energy scoring method, and the successor, ANCHOR2, is an updated version of the predecessor. fMoRFpred is a fast version of MoRFpred [13] with slightly compromising the prediction accuracy, but has an ability to accept 2,000 protein sequences at a time, though MoRFpred takes up to ﬁve protein sequences. Both methods are available only in their web servers. Because we have as many as 837 sequences as mentioned above, we chose fMoRFpred instead of MoRFpred.
+The outputs of the four prediction tools we use in this work are all formulated to be the probability of each residue being a disorder-to-ordered region for IUPred2 and being a disorder-to-ordered binding region for the others.
+Two examples of the ANCHOR1 output are given in Fig. 1. The substrate protein of (a) is DCC HUMAN(P43146). There is DEG SIAH 1 site on the region from the position 1331 to 1339. As shown in the graph, the probabilities of ANCHOR1 around that region are approximately 0.9. However, the substrate protein of (b) is MYC HUMAN (P01106). Though there is a DEG SCF FBW7 1 site on the region from the position 55 to 62, the ANCHOR1 probabilities on the region are less than half.
+Methods Preliminaries Let Σ be an alphabet of 20 distinct letters representing the 20 amino acids. A dataset of N sequences over Σ is referred to as X = {X1, . . . , XN }. The jth letter of the ith sequence of Xi is denoted by Xi,j. |Xi| represents the length of Xi. The collection of all indexes of the letters of the sequences is denoted by U = {(i, j)|i = 1, . . . , N, j = 1, . . . , |Xi|}. The complement of a subset V of U , that is, U \ V , is denoted by V c. We introduce a counting function cX that returns cX(V ) = (freq 1, . . . , freq |Σ|)T where freq (cid:96) is the number of the (cid:96)th type letter of Σ in the letter set {Xi,j|(i, j) ∈ V }. For simplicity, we use c(V ) instead of cX(V ) because once a set of sequences is given, the set remains ﬁxed.Motif model We adopt two models for the distribution of the motif sites: one occurrence per sequence (OOPS) and zero or one occurrence per sequence (ZOOPS). The OOPS model [16] assumes that each sequence has exactly one
+Maruyama and Matsuzaki
+Page 4 of 13
+Figure 1 Example of a source information, pos i,j for position prior. The x-axis shows the position of a protein sequence. The y-axis represents the probability assigned to a sequence position by ANCHOR1. The known DEG motif occurrence is speciﬁed by the symbol ’x’ on their sequence positions at the height of 1. The graph title consists of the entry name and the UniProt accession of the substrate protein and the IDs of the DEG motifs on the protein. (a) The substrate sequence is DCC HUMAN (P43146). (b) The substrate sequence is MYC HUMAN (P01106).
+occurrence of a motif. Let zi be a hidden random variable that represents the starting position of the occurrence of a motif in Xi; zi ∈ {1, . . . , |Xi|−W +1} for the motif width W where i = 1, . . . , N . We denote all zi together as the vector Z = (z1, . . . , zN ). The ZOOPS model [17] is a generalization of OOPS in which each sequence is permitted to have either zero or one occurrence of a motif. We denote the state where Xi does not have any motif occurrence by zi = 0.A site of a motif is often modeled as a single contiguous block over residues. However a more discriminative motif can sometimes be obtained by excluding some positions within the contiguous block of a motif. Liu et al. proposed a way of selecting a constant number of R(≤ W ) columns in an aligned block of width W to form a motif [20]. This model is called a fragmentation model of a motif.
+Such R columns selected as part of a motif are speciﬁed by λ = (λ1, . . . , λW ), where λ1 = λW = 1, λw ∈ {0, 1} for w = 2, . . . , W − 1, and (cid:80)W w=1 λw = R.
+λw = 1 (resp. 0) means that the wth column is evaluated as part of a motif (resp. background) model. We refer to W as the motif width. The region of length W covered by a motif is referred to as the occurrence of the motif. Our Gibbs sampling algorithm optimizes W and R by updating λ. After each update, λ is freshly indexed so that λ1 = λW (cid:48) = 1 for a new motif width W (cid:48). Thus, both the columns represent the two ends of the new motif. For w ∈ {w|λw = 1}, λ(w) is deﬁned as the order of the wth element among the elements having the value 1. For example, for λ = (1, 0, 0, 1, 1), we have λ(1) = 1, λ(4) = 2, and λ(5) = 3.We used the same notations of the basic arithmetic operations as those used in [20]. For the two vectors u and v of the same dimension n, we deﬁne u + v =
+Maruyama and Matsuzaki
+Page 5 of 13
+1 · · · uvn
+(u1 + v1, . . . , un + vn), u/v = (u1/v1, . . . , un/vn), uv = uv1 n , xv = xv1 · · · xvn for a real x, |u| = (cid:80)n i=1 |ui|, and u−i = (u1, . . . , ui−1, ui+1, . . . , un).
+Note that x|u| = xu if ui ≥ 0 for i = 1, . . . , n, and that xv · uv = (xu)v. For a gamma function Γ, let Γ(u) = Γ(u1) · · · Γ(un).
+The local alignment of the sequences occupied by a motif of the given sequences X is represented as a matrix where the ith row corresponds to the ith sequence and the wth column indicates the wth relative position within a motif occurrence. Our Gibbs sampling algorithm applies several operations to various subsets of the indexes of the letters of given sequences.
+Then, we introduce matrix-like notations representing the subsets of indexes, as shown in Table 2. I[Z, λ] is the collection of the indexes with zi > 0 and λw = 1.I[Z, w] is a subset of I[Z, λ] in which the elements are limited to those in the wth column. I[Z−k, λ] is a subset of I[Z, λ] in which the kth sequence is removed.
+I[Z−k, w] is a subset of I[Z, w] in which (k, zk + w − 1) is excluded. I[zk, λ] is a subset of I[Z, λ] in which the elements are limited to the positions of the kth sequence. I[zk, w] is a singleton of the position corresponding to the wth position of a motif occurrence in the kth sequence; if the sequence does not have any occurrence of the motif, the set is empty. Note that all of these notations can be used in both the OOPS and the ZOOPS models.
+Figure 2 Example of a fragmentation model of a motif. The six rectangles represent the columns selected as the motif part.
+In this example, λ is (1, 0, 1, 1, 0, 1, 0, 1, 0, 1), which gives R = 6 and W = 10.
+We also introduced the fragmentation motif model discussed in [20]. In this model, R(< W ) selected positions of a short aligned block of the width W are evaluated as the motif part (see Fig. 2). DegSampler optimizes R although it is kept constant in [20]. We also show that the posterior probability distribution is tempered for the ZOOPS and OOPS models in the fragmentation model. In other words, the posterior probability distribution is parameterized with a temperature parameter of T . We ﬁrst describe the untempered version.Likelihood A position-speciﬁc scoring matrix (PSSM) is a de facto standard model of a likelihood function of a posterior probability distribution for the sequence motif identiﬁcation. This model evaluates how much of each residue is conserved in each of the selected position of a motif.
+Let L be the number of letters, that is, L = 20 for amino acids. A PSSM is formulated as an L×R matrix
+θ1:R = (θ1, . . . , θR), where θr = (θ1,r · · · θL,r)T is the parameter set of a categorical distribution. For r = 1, . . . , R, it holds that (cid:80)L (cid:96)=1 θ(cid:96),r = 1 and θ(cid:96),r ≥ 0 ((cid:96) = 1, . . . , L). These categorical distributions are assumed to be independent of each other.
+The letters outside the R selected positions in all given sequences are assumed to be drawn independently from the same categorical distribution with the parameter θ0. This is called the background model.
+The unnormalized likelihood function for the ZOOPS model of DegSampler, which is parameterized by Z, λ, and θ0:W = (θ0, θ1, . . . , θW ), is deﬁned asL(Z, λ, θ0:R|X) = θc(I[Z,λ]c)
+·
+(cid:89)
+θc(I[Z,w]) λ(w)
+.
+w:λw=1
+Thus the probability of X given Z, λ, and θ0:R can be given as
+p (X |Z, λ, θ0:R ) ∝ L(Z, λ, θ0:R|X).
+Note that this function is valid even in the OOPS model because the indexes of all the positions of the ith sequence with zi = 0 are excluded in I[Z, λ] and included in I[Z, λ]c.
+Prior distributions Here, we formulate the prior distributions for the parameters θ1:R, Z, and λ.
+Prior distribution of θ1:R Recall that c(I[Z, w]) with λw = 1 is a sample from the categorical distributions with the parameters θλ(w).
+A Dirichlet distribution is known to be a conjugate prior for a categorical distribution and is deﬁned as B(α) θα−1, where the parameter α is of Dir (θ |α ) = 1 dimension L; 1 is the L-dimensional vector with all elements having a value of 1, and the multivariate beta function B (α) is deﬁned as follows:
+B (α) =
+Γ (α) Γ (|α|)
+.
+We use the same Dirichlet distribution parameter αm for the R random variables θ1:R = (θ1, . . . , θR). For r = 1, . . . , R, we deﬁne the following:p (θr |αm ) = Dir (θr |αm ) .
+Next is the prior probability distribution for the background model. In general, the prior information of a background model is not more important than that of a motif model because I[Z, λ]c contains many letters.
+Thus the prior distribution is set to be the simplest Dirichlet distribution, that is the uniform distribution over the open standard (|Σ − 1)-simplex.
+Prior distribution of Z We assume that for each i = 1, . . . , N , and j = 1, . . . , |Xi|, the prior probability pos i,j is given; this probability represents the likelihood of the position being part of a motif occurrence. We introduce the notation m(zi, λ) = {zi + w − 1|λw = 1, w = 1, . . . , W, zi (cid:54)= 0}, which represents the positions included in a current motif occurrence speciﬁed by zi and λ. Then, we suppose that p(zi|λ), the probability of zi given λ, is proportional to
+(cid:89)
+pos i,j
+|Xi| (cid:89)
+(1 − pos i,j)
+j∈m(zi,λ)
+j=1s.t.j(cid:54)∈m(zi,λ)
+Hyperprior distribution of λ We discuss the hyperprior distribution of λ. There are various fragmentation patterns in the ELM resource; therefore, it will be reasonable to assume no bias for λ. Then, we use the uniform distribution of λ speciﬁed by using the two parameters Rmin and Wmax such that Rmin ≤ R and W ≤ Wmax, respectively.Collapsed posterior distribution The joint posterior probability distribution of the hidden random variables Z, λ, and θ0:R, in the ZOOPS model is formulated as
+if zi (cid:54)= 0 and is proportional to
+p (Z, λ, θ0:R| X)
+∝ L (Z, λ, θ0:R |X ) · p(θ1:R|αm) · p(θ0|αb) · p(Z|λ) · p(λ).
+By integrating out θ0:R, as shown in [20], we obtain the collapsed posterior distribution of Z and λ as
+.
+(1)
+(cid:89)
+(cid:18) pos i,zi+w−1
+(cid:19)y·δzi,0
+w:λw=1
+1 − pos i,zi+w−1
+N(cid:89) i
+=1
+·
+∝ B (c (I[Z, λ]c) + αb) ·
+B (c (I[Z, w]) + αm)
+(cid:89)
+w:λw=1
+p (Z, λ| X)
+From this collapsed posterior distribution, we derive conditional distributions of zk and λv to update their values. This collapsed posterior distribution works in both the OOPS and ZOOPS models.
+if zi = 0. This formulation is almost the same as in [21]. Furthermore, we apply two modiﬁcations to the formulation. Note that the last term (cid:81)|Xi| j=1 (1 − pos i,j) is constant once X is given. Then, we use the terms that are obtained by dividing both cases by the constant. Another modiﬁcation is the exploitation of the coeﬃcient y of this prior term to adjust the eﬀectiveness of the prior information quantity, for which the term is raised to the power of y. The resulting prior probability distribution of zi given λ is proportional tofpos(zi; λ) =
+(cid:89)
+(cid:18) pos i,j
+(cid:19)y·δzi,0
+,
+j∈m(zi,λ)
+1 − pos i,j
+(1 − pos i,j)
+|Xi|
+(cid:89) j
+=1
+where δi,j is the Kronecker’s delta, equaling 1 if i = j and 0 otherwise. Thus, the right hand side is 1 when zi = 0. The resulting prior distribution of Z is formulated as
+Update of a motif starting position zk To update zk, we derive the conditional probability p (zk |Z−k, λ, X ) from Eq. (1), which is proportional to
+(cid:33)c(I[zk,w])
+(cid:19)y·δzk ,0 (cid:41)
+,
+(cid:89)
+(cid:32) ˆθλ(w)[−k] ˆ θ0[−k] w:λw=1 (cid:18) pos k,zk+w−1
+ 
+1 − pos k,zk+w−1
+·
+with diﬀerent normalizing constants in the ZOOPS and OOPS models. We describe how to determine the value of pos i,j in the Results section.
+N(cid:89) i
+=1
+p(Z|λ) ∝
+fpos(zi; λ)
+Table 2 Notations related to Z.
+Notation I[Z, λ] I[Z, w] I[Z−k, λ] I[Z−k, w] I[zk, λ]
+I[zk, w]
+Deﬁnition {(i, zi + w − 1)|i = 1, . . . , N, zi (cid:54)= 0, λw = 1, w = 1, . . . , W } {(i, zi + w − 1)|i = 1, . . . , N, zi (cid:54)= 0} {(i, j) ∈ I[Z, λ]|i (cid:54)= k} {(i, j) ∈ I[Z, w]|i (cid:54)= k} {(k, j) ∈ I[Z, λ]} (cid:26) ∅{(k, zk + w − 1)}
+if zk = 0 otherwise
+Maruyama and Matsuzaki
+Page 6 of 13
+Maruyama and Matsuzaki
+Page 7 of 13
+Simulated annealing We also derived a tempered version of the collapsed posterior probability distribution, which was parameterized with the temperature parameter T as follows:
+p (Z, λ| X)
+∝ B (c (I[Z, λ]c) /T + αb)
+B (c (I[Z, w]) /T + αm)
+(cid:89)
+(cid:18) pos i,zi+w−1
+(cid:19)y·δzi,0
+w:λw=1
+1 − pos i,zi+w−1
+.
+(2)
+The corresponding conditional probability distribution of zk is as follows:
+∝
+(cid:89)
+p (zk |Z−k, λ, X ) (cid:32) ˆθλ(w)[−k] ˆ θ0[−k] w:λw=1 (cid:18) pos k,zk+w−1
+1 − pos k,zk+w−1
+(cid:33)c(I[zk,w])/T
+(cid:19)y·δzk ,0
+,
+where
+ˆ θλ(w)[−k] =
+ˆ θ0[−k] =
+c (I[Z−k, w]) /T + αm |c (I[Z−k, w]) /T + αm| c (I[Z−k, λ]c) /T + αb |c (I[Z−k, λ]c) /T + αb|
+,
+.
+The conditional probabilities of λv are given as follows:
+(cid:89)
+w:λw=1
+N(cid:89) i
+=1
+·
+·
+·
+(cid:18) pos i,zi+v−1
+(cid:19)y·δzi,0/T
+1 − pos i,zi+v−1
+N(cid:89) i
+=1
+·
+p(λv = 1|λ−v, Z, X) ∝ B (c (I[Z, v]) /T + αm)where λ(cid:48) is the same as λ, but λv = 1 and
+.
+(cid:12)(cid:12)
+c (cid:0)I[Z, λ(cid:48)]c(cid:1) /T + αb c (cid:0)I[Z, λ(cid:48)]c(cid:1) /T + αb
+(cid:12)(cid:12)
+˜ θ0 =
+and
+p(λv = 0|λ−v, Z, X)
+∝ ˜θ
+c(I[Z,v])/T
+Algorithm of DegSampler Here we provide an overview of the algorithm of DegSampler in Algorithm 1. At the top level of it repeats the main procedure of the DegSampler,
+Note that the approximation scheme given in [20] has been used for the derivation. In particular, when zk = 0, p (zk |Z−k, λ, X ) is proportional to 1 with the same normalizing constant because all c (I[zk, w]) and δzk,0 become 0.
+Update of the motif column selection λ We describe how to update λ. First, the current λ is extended by attaching 2 · ∆ new columns to the left and right sides of λ. The columns added on the left are indexed as −∆ + 1, . . . , −1, 0, and the columns added on the right are indexed as W +1, . . . , W +∆. Thus, the columns of the resulting λ are indexed continuously from −∆ + 1 to W + ∆.In the second step, the index v ∈ {−∆ + 1, . . . , W + ∆} was chosen randomly or in a ﬁxed order. In the third step, we performed random sampling according to the conditional probability distribution of λv ∈ {0, 1} with the current values of λ−v, Z, and X. The probabilities of the distribution are calculated as
+(cid:18) pos i,zi+v−1
+(cid:19)y·δzi,0
+,
+1 − pos i,zi+v−1
+N(cid:89) i
+=1
+p(λv = 1|λ−v, Z, X)
+∝ B (c (I[Z, v]) + αm) ·
+p(λv = 0|λ−v, Z, X)
+∝ ˜θ
+c(I[Z,v])
+Both two right hand side equations share the same normalizing constant.
+If λv = 1 is selected in the sampling, and v is an index of the additional left columns indexed as −∆ + 1, . . . , −1, 0, then the value of zi is replaced with zi + v − 1 for zi (cid:54)= 0. Furthermore, the leftmost and rightmost contiguous blocks of columns indexed by w with λw = 0 are removed. For example, if the content of λ after sampling with ∆ = 3 and v = −1 is (010110111000), then the updated λ is (10110111).
+An advantage of this update is that a motif can easily shift to the left and right on the substrate sequences.In addition, the R and W values are also varied. The default value of ∆ is set to 3 in this research.
+where λ(cid:48) is the same as λ but λv = 1, and
+.
+(cid:12)(cid:12)
+c (cid:0)I[Z, λ(cid:48)]c(cid:1) + αb c (cid:0)I[Z, λ(cid:48)]c(cid:1) + αb
+(cid:12)(cid:12)
+˜ θ0 =
+where
+ˆ θλ(w)[−k] =
+ˆ θ0[−k] =
+c (I[Z−k, w]) + αm |c (I[Z−k, w]) + αm| c (I[Z−k, λ]c) + αb |c (I[Z−k, λ]c) + αb| .
+,
+Maruyama and Matsuzaki
+Page 8 of 13
+function called DegSampler2Core three times to avoid falling into a local optimmum. DegSampler2Core repeats the procedure M = 300 times. At Msa = 240, a simulated annealing is started. Thus, the last 20% of all iterations are annealed. After that, at each repetition, the value of the temperature parameter T is reduced by sa ratio = 0.999.
+covered by the predicted motif occurrences are false negatives. These quantities are calculated only on the protein sequences annotated by some DEG motif occurrences because the other sequences always have no true positives.Let TP , FP , and FN be the number of true positives, that of false positives, and that of false negatives, respectively. We represent the precision, recall, and F-measure as
+Function DegSampler(): optLogPost ← −∞ for i ← 1 to 3 do
+DegSampler2Core()
+end return (Zbest, λbest, optLogPost)
+Function DegSampler2Core():
+T ← 1 λ and Z are initialized UpdateBestState(Z, λ) for m ← 1 to M do
+if m = Msa then
+if m ≥ Msa then
+T = sa ratio · T for n ← 1 to N do
+zi ∼ p (zk |Z−k, λ, X ) UpdateBestState(Z, λ)
+end choose v randomly λv ∼ p(λv|λ−v, Z, X) UpdateBestState(Z, λ)
+end
+(logPost, Z, λ) = (optLogPost, Zbest, λbest)
+Function UpdateBestState(Z, λ):
+logPost ← the R.H.S. of Eq. (2) for Z and λ if optLogPost < logPost then optLogPost ← logPost Zbest ← Z λbest ← λ
+Algorithm 1: DegSampler algorithm. The three variables optLogPost, Zbest, and λbest, are supposed to be global, that is, they can be accessed from any place.
+Performance measure We measure the quality of predicted motif occurrences with respect to the DEG motif sites by precision, recall, and F-measure. In general, the precision score is the ratio of the number of true positives to the predicted positives, and the recall score is the ratio of the number of true positives to the number of real positives. The F-measure is the harmonic mean of precision and recall. In this work we deﬁne the sequence positions of the DEG motif sites that are shared by the predicted motif occurrences as true positives. Similary, the sequence positions of the predicted motif occurrences of the substrate protein sequences with some DEG motif annotations that are not covered by any DEG motif sites are false positives. Finally, the sequence positions of the DEG motif sites that are notprecision =
+recall =
+TP TP + FP TP TP + FN
+,
+,
+F = 2 ·
+precision · recall precision + recall
+.
+Results Predictability on 36 E3s Experimental conﬁguration In DegSampler, the pseudo count of each position of a motif were set as αm = 0.1·1, and the site distribution model was set as ZOOPS. DegSampler were executed ﬁve times for each set of parameter values.
+Source of position-speciﬁc prior information We here examine how eﬀective the position-speciﬁc prior information derived from
+IUPred2, ANCHOR1, ANCHOR2, and fMoRFpred maxW = 9 minR = 6 y = 1
+Eﬀectiveness of position-speciﬁc prior One feature of DegSampler is that it can exploit position-speciﬁc prior information of the occurrences of E3 motifs. DegSampler can regulate the eﬀect of the prior using the parameter y. The F-measure values of DegSampler with diﬀerent y values as y = 0, 0.1, 0.2, . . . , 2, 3, . . . , 21, are shown in Figure 3(a).
+The other parameter values are the same as the values that help attain the highest F-measure value in the performance comparison section. In accordance with the increase of y, the F-measure drastically increases from y = 0 and converges around y = 1.0. After that, up to y = 19, the F-measure is stable. Then, at y = 20 and 21, the F-measure drops by 10%. Probably, this change is caused because the position-speciﬁc prior information is too biased. When y is increased to 22, the calculated value proportional to the conditional distribution of zi becomes zero because y is too large.The case in which y = 0 is equivalent to the case in which the position-speciﬁc prior probability distribution is a uniform distribution. The mean of the Fmeasure value in this case is 0.028. This value is quite
+Maruyama and Matsuzaki
+Page 9 of 13
+Figure 3 Eﬀectiveness of position-speciﬁc prior information on the F-measure. The height of a bar represents the mean of the F-measure, and the error bar shows the standard error. (a) DegSampler. The coeﬃcient y of the position-speciﬁc prior distribution is in the range of {0, 0.1, . . . , 2, 3, . . . , 21}. The parameter values of DegSampler are as follows: DegSampler: Wmax = 9, Rmin = 8, αm = 0.1 · 1, pos i,j is the ANCHOR1 probability, the motif site distribution model is ZOOPS. (b) DegSampler1. The coeﬃcient cd of the position-speciﬁc prior distribution is in the range of {60, 80, . . . , 160}}. The parameter values of DegSampler1 are as follows: W = 9, R = 7, αm = 0.1 · 1; pos i,j is the ANCHOR1 probability. The motif site distribution model is ZOOPS, and the temperature parameter of the second likelihood function Taai = ∞.low; therefore, we can recognize the usefulness of the position-speciﬁc prior information.
+For reference, we have shown the F-measure values of DegSampler1 with diﬀerent values of the coeﬃcient of the position-speciﬁc prior cd = 60, 80, . . . , 160 are shown in Figure 3(b). The other parameter values are the same as those by which the highest Fmeasure value is attained in the performance comparison section. The F-measure is unstable compared with DegSampler. We expected that a higher F-measure value could be achieved with a larger value of cd because the highest F-measure value on the graph is marked at the right end-point of cd = 160. However, with cd = 180 as DegSampler, the calculated value proportional to the conditional distribution of zi becomes zero because cd is too large.
+Performance comparison
+We searched for the best parameter value set of DegSampler; however, the search space was relatively limited and separated into two spaces. One space was y = 0, 0.1, . . . , 2, 3, . . . , 21 with Wmax and Rmin ﬁxed to 9 and 8, respectively. The values of the remaining parameters were the same as the values in the synthetic data. Another search space is Wmax = 6, 7, . . . , 12 and Rmin = Wmax − 3, . . . , Wmax − 1 with y = 1. The other parameter values are the same as in the synthetic data experiment. Among these parameter values, the conﬁguration (Wmax, Rmin, y) = (9, 8, 8) marked the highest F-measure of 0.290, as given in Fig. 4. This was 17% higher than that of DegSampler1.From the graph of Fig. 4, it is clear that DegSampler outperforms DegSampler1 and the other methods.
+To see details of the F-measure relationship between DegSampler and DegSampler1, we applied a Wilcoxon rank sum test for each E3 input instance. Table 3 shows the results of only those E3s whose p-values were less than 1. A p-value of 1 implies that the mean of the F-measure values of DegSampler is identical or almost the same as that of DegSampler1. Eleven E3s are listed in Tab. 3. Among them, nine instances are statistically signiﬁcant with the signiﬁcance level of 0.05. Among the nine instances, DegSampler outperforms DegSampler1 on eight E3 instances.
+Example of found motif occurrences Here, we give an example of the outputs of DegSampler. In E3Net, the E3 ubiquitin ligase of SYVN1 HUMAN is associated with the following 12 substrate proteins: O00141 (SGK1 HUMAN; Serine/threonine-protein kinase Sgk1), O15354 (GPR37 HUMAN; Prosaposin receptor GPR37), O75460 (ERN1 HUMAN; Serine/threonineprotein kinase/endoribonuclease IRE1), P04035 (HMDH HUMAN; 3-hydroxy-3-methylglutaryl-coenzyme A reductase), P04637 (P53 HUMAN; Cellular tumor antigen p53), P10636 (TAU HUMAN; Microtubule-associated protein tau), P10909 (CLUS HUMAN; Clusterin), P42858 (HD HUMAN; Huntingtin), Q86TM6 (SYVN1 HUMAN; E3 ubiquitin-protein ligase synoviolin), Q8WZ42 (TITIN HUMAN; Titin), Q92542 (NICA HUMAN; Nicastrin), and Q9UKV5 (AMFR HUMAN; E3 ubiquitin-protein ligase AMFR).Table 4 shows the alignment of the motif occurrences found by DegSampler and DegSampler1 along with the parameter with which the highest F-measure value is marked in the performance comparison on the real data. The motif occurrence of DegSampler on the P04637 (P53 HUMAN) sequence starting at position 18 overlaps with a site of the DEG motif, DEG MDM2 SWIB 1, starting at 19. The regular expression of the DEG motif is F[^P]{3}W[^P]{2,3}[VIL].
+The suﬃx of length 8 of the motif occurrence sequence FSDLWKLL exactly matches the DEG motif. However, the motif occurrence of DegSampler1 on the sequence does not overlap with the DEG site.
+We checked the ANCHOR1 probability for the 5th substrate protein P04637 (P53 HUMAN). The graph is shown in Fig. 5. As can be seen, the ANCHOR1 probabilities on the site of DEG MDM2 SWIB 1 from position 19 to 26 are almost 1. As a result, DegSampler succeeded in using this information, but DegSampler1 failed to do so.
+Contributions of the formulation of position-speciﬁc prior probability distribution, the utilization of simulated annealing, and the site distribution model In this section, we examine the important contributions of DegSampler. One contribution is the formulation of the position-speciﬁc prior probability distribution. We compare the performance of DegSampler with that of DegSampler in which the formulation was replaced with that of DegSampler1. The second factorMaruyama and Matsuzaki
+Page 10 of 13
+Figure 4 Performance comparison of DegSampler with DegSampler1, MEME, and GLAM2. The parameter values of DegSampler and DegSampler1 are as follows: DegSampler: Wmax = 9, Rmin = 8, y = 1, αm = 0.1 · 1, pos i,j is the ANCHOR1 probability, the motif site distribution model is ZOOPS; DegSampler1: W = 9, R = 7, cd = 160, αm = 0.1 · 1, pos i,j is the ANCHOR1 probability, the motif site distribution model is ZOOPS, the temperature parameter of the second likelihood function Taai = ∞. The parameter settings of MEME-OOPS, MEME-ZOOPS, MEME-OOPS-Prior, MEME-ZOOPS-Prior, and GLAM2 are the same as those in the synthetic experiment.
+Figure 5 The output of ANCHOR1 for the substrate protein P53 HUMAN (P04637). The x-axis shows the position of a protein sequence. The y-axis represents the probability assigned to a sequence position by ANCHOR1. A DEG MDM2 SWIB 1 site is located in the region from position 19 to 26. The location is indicated with the symbol ’x’ on their sequence positions at the height of 1. The graph title consists of the entry name of the substrate protein, its UniProt accession, and the IDs of the DEG motifs on the protein.is simulated annealing. We compared the performances of DegSampler with and without simulated annealing.
+Finally, the performance of DegSampler with ZOOPS was compared with the performance of DegSampler with OOPS. The parameter values were set as follows: Wmax = 9, Rmin = 8, y = 8, αm = 0.1 · 1; pos i,j is the ANCHOR1 probability. PosPriorVer2 (resp. PosPriorVer1) refers to the formulation of the DegSampler (resp. DegSampler1) position-speciﬁc prior probability distribution. SA (resp. NoSA) refers to the utilization (resp. no utilization) of the simulated annealing of DegSampler. ZOOPS and OOPS are the speciﬁcations of the site distribution mode. Thus, the leftmost conﬁguration PosPriorVer2-SA-ZOOPS is identical with the parameter values used for the performance comparison on the real data. The second conﬁguration PosPriorVer2-NoSA-ZOOPS is the same but without the simulated annealing. The third conﬁguration PosPriorVer1-SA-ZOOPS is the same as the ﬁrst one
+but has the formulation of the DegSampler1 positionspeciﬁc prior probability distribution. The fourth conﬁguration PosPriorVer1-NoSA-ZOOPS is the same as the ﬁrst one but has the formulation of the DegSampler1 position-speciﬁc prior probability distribution without the simulated annealing. The last conﬁguration PosPriorVer2-SA-OOPS is the same as the ﬁrst conﬁguration but has the OOPS model.Fig. 6 presents the results graphically. The two leftmost conﬁgurations in Fig. 6 show the contribution of simulated annealing. Although there is no major diﬀerence between the two leftmost conﬁgurations, a special simulated annealing has been used in DegSampler. There is room for improvement in the simulated annealing. The third and fourth conﬁgurations use the formulation of the DegSampler1 pos¡ition-speciﬁc prior probability distribution. Clearly, the performance obtained by using the version 2 formulation is superior to that obtained by using the version 1 formulation.
+Maruyama and Matsuzaki
+Page 11 of 13
+Table 3 E3s with a p-value less than one. The columns show the name of E3, the mean and standard error of the F-measures of DegSampler1, the mean and standard error of the F-measures of DegSampler, and the p-value.
+E3 APC(CDH1) YEAST CHIP HUMAN COP1-SPA1 ARATH DCX(DET1-COP1) HUMAN DCX(DTL) HUMAN ICP0 HHV11 MDM2 HUMAN MKRN1 HUMAN SCF(BTRC) HUMAN SCF(SKP2) HUMAN SYVN1 HUMAN
+DegSampler1 SE MeanDegSampler SE Mean
+p-value
+Figure 6 Performance with various parameter conﬁgurations. The parameter values are as follows: Wmax = 9, Rmin = 8, y = 8, αm = 0.1 · 1, pos i,j is the ANCHOR1 probability. PosPriorVer2 (resp. PosPriorVer1) means the formulation of the DegSampler (resp. DegSampler1) position-speciﬁc prior probability distribution. SA (resp. NoSA) means the utilization (resp. no utilization) of the simulated annealing of DegSampler. ZOOPS and OOPS are the speciﬁcations of the site distribution mode. Thus, the leftmost conﬁguration in the graph, PosPriorVer2-SA-ZOOPS is identical with the parameter values used in the performance comparison on the real data. The second conﬁguration PosPriorVer2-NoSA-ZOOPS is the same but does not have simulated annealing. The third conﬁguration PosPriorVer1-SA-ZOOPS is the same as the ﬁrst conﬁguration but has the formulation of the DegSampler1 position-speciﬁc prior probability distribution. The fourth conﬁguration PosPriorVer1-NoSA-ZOOPS is the same as the ﬁrst conﬁguration but has the formulation of the DegSampler1 position-speciﬁc prior probability distribution without the simulated annealing. The last conﬁguration PosPriorVer2-SA-OOPS is the same as the ﬁrst conﬁguration but has the OOPS model.The diﬀerence between the leftmost and the rightmost conﬁgurations is the site distribution model. Their performances were almost the same. However, the result largely depends on the data used.
+Discussion Narlikar et al., also proposed an alternative prior score, which is calculated from negative sequences as well as positive ones.
+pi,zi ∝
+SD 1 − SD
+where
+Concluding remarks Judging from the low predictability of the popular general motif ﬁnding tool, MEME, shown in Fig. 4, the identiﬁcation problem of E3 motifs is challenging. Thus, to resolve the problem, we need to develop specialized motif-ﬁnding methods, such as DegSampler1 and DegSampler. In this study, we found the following. First, it is important to determine how to use position-speciﬁc prior information. MEME used the same source of the prior information. However, the F-measure of MEME was much lower than those of DegSampler and DegSampler1. Second, the search strategy is important to ﬁnd motifs. Essentially, the diﬀerence between DegSampler and DegSampler1 is their Gibbs updating procedures. The search strategy of DegSampler was superior to that of DegSampler1 because on the eight E3 instances, the F-measure of DegSampler was statistically higher than that of DegSampler1.(cid:88)
+SN (Yk, (cid:96), λ)
+One of the future strategies will be to introduce more complex motif models such as the dependency model.
+The dependency model can deal with the correlation between the residues at remote positions. Then, more accurate predictions will be realized for such degrons.
+Declarations Ethics approval and consent to participate Not applicable.
+because this method is not limited to the problem of
+ﬁnding degrons.
+Gibbs sampler with Position-speciﬁc prior
+Consent to publish Not applicable.
+if zi (cid:54)= 0 and pi,zi ∝ 1 otherwise with the same normalizing constant.
+o-do: rename the tool name.
+— T
+(cid:88)
+SN (Xk, (cid:96), λ)
+SD(Xi, zi, λ) =
+(cid:88)
+(k,(cid:96)):Xk,(cid:96),λ=Xi,zi,λ SN (Xk, (cid:96), λ) +
+(k,(cid:96)):Xk,(cid:96),λ=Xi,zi,λ
+(k,(cid:96)):Yk,(cid:96),λ=Xi,zi,λ
+Maruyama and Matsuzaki
+Page 12 of 13
+Table 4 Example of an output of DegSampler. The E3 picked up here is SYVN1 HUMAN and the substrate proteins assigned to the E3 by E3Net are O00141 (SGK1 HUMAN), O15354 (GPR37 HUMAN), O75460 (ERN1 HUMAN), P04035 (HMDH HUMAN), P04637 (P53 HUMAN), P10636 (TAU HUMAN), P10909 (CLUS HUMAN), P42858 (HD HUMAN), Q86TM6 (SYVN1 HUMAN), Q8WZ42 (TITIN HUMAN), Q92542 (NICA HUMAN), and Q9UKV5 (AMFR HUMAN). Among them, only the 5th substrate, P04637 (P53 HUMAN), is annotated with a DEG motif, DEG MDM2 SWIB 1. Column “start” shows the starting position of the motif occurrence. An asterisk on the top of a column indicates that the column was selected as part of a motif. The residues covered by a motif occurrence and the known DEG motifs simultaneously are underlined.DegSampler substrate
+O00141 O15354 O75460 P04035 P04637 P10636 P10909 P42858 Q86TM6 Q8WZ42 Q92542 Q9UKV5
+O00141 O15354 O75460 P04035 P04637 P10636 P10909 P42858 Q86TM6 Q8WZ42 Q92542 Q9UKV5
+start
+* * 20 M V A T L F L A F T K L L T L T 518 M L K E L L R R
+* * * * * * * F M A I L I A I Q L L F Q L F A G W V I L I Y A K V L L L L L W K D S L G D L L Q H L L G V F L L F A L M K K E T L Y Q N I Q I A K L Q F I A L L V S C F A A A A R M L
+* L P S V
+* N D A T V V G V 40 M D D K V A Q K
+L L V E 8 M K L
+* * * Q I F L Q L G V I N S S L M L L Q H L K V S E F S E L
+95 M V R L
+L R
+L S E R M L
+* K F K L S L F L P
+K A
+I L I L P G D K V
+H A
+* A Q S D D D S S A
+F A
+DegSampler1 substrate
+start
+Availability of data and materials The datasets used and analyzed during the current study are available in our repository, http://www.design.kyushu-u.ac.jp/~maruyama/software.html.
+Author details 1Faculty of Design, Kyushu University, Shiobaru, Minami-ku, Fukuoka, Japan. 2Medical Institute of Bioregulation, Kyushu University, Maidashi, Higashi-ku, Fukuoka, Japan.Competing interests The authors declare that they have no competing interests.
+Funding This work was supported in part by JSPS KAKENHI Grant Number JP17K00407 and 18H05214.
+Authors’ contributions OM participated in the conception of this project, in the formulation of the mathematical model and the algorithm, in the implementation of the software, in the computational experiment, in the analysis of the results, and in the drafting of the manuscript. FM participated in the conception of this project, in the analysis of the results, and in improvement of the manuscript. All of the authors read and approved the ﬁnal manuscript.
+Acknowledgements The authors thank the anonymous reviewers for their careful reading of the submitted version of our manuscript and their many insightful comments and suggestions. We would also like to thank Edanz (www.edanzediting.co.jp) and Enago (www.enago.jp) for the English language review of the submitted and revised versions of this manuscript, respectively.References
+1. Weissman, A.M., Shabek, N., Ciechanover, A.: The predator becomes
+the prey: regulating the ubiquitin system by ubiquitylation and degradation. Nat Rev Mol Cell Bio. 12, 605–620 (2011)
+2. Dinkel, H., et al.: ELM 2016–data update and new functionality of the
+eukaryotic linear motif resource. Nucleic Acids Res. 44, 294–300 (2016)
+3. Han, Y., Lee, H., Park, J.C., Yi, G.-S.: E3Net: A system for exploring
+E3-mediated regulatory networks of cellular functions. Mol Cell Proteomics 11, 111–014076 (2012)
+4. Bailey, T.L., Elkan, C.: Fitting a mixture model by expectation
+maximization to discover motifs in biopolymers. In: Proceedings of the Second International Conference on Intelligent Systems for Molecular Biology, pp. 28–36. AAAI Press, Menlo Park, California, USA (1994)
+5. Lawrence, C., Altschul, S., Boguski, M., Liu, J., Neuwald, A.,
+Wootton, J.: Detecting subtle sequence signals: a Gibbs sampling strategy for multiple alignment. Science 262, 208–214 (1993) 6. Frith, M.C., Saunders, N.F.W., Kobe, B., Bailey, T.L.: Discoveringsequence motifs with arbitrary insertions and deletions. PLoS Comput Biol. 4, 1000071 (2008)
+7. Gordˆan, R., Narlikar, L., Hartemink, A.J.: A fast, alignment-free, conservation-based method for transcription factor binding site discovery. In: Proc 12th Annual International Conference, RECOMB 2008 (LNBI 4955), pp. 98–111 (2008)
+8. Bailey, T.L., Bod´en, M., Whitington, T., Machanick, P.: The value of
+position-speciﬁc priors in motif discovery using MEME. BMC
+Maruyama and Matsuzaki
+Page 13 of 13
+Bioinformatics 11, 179 (2010)
+9. Guharoy, M., Bhowmick, P., Sallam, M., Tompa, P.: Tripartite degrons confer diversity and speciﬁcity on regulated protein degradation in the ubiquitin-proteasome system. Nat Commun. 7, 10239 (2016) 10. Guharoy, M., Bhowmick, P., Tompa, P.: Design principles involving
+protein disorder facilitate speciﬁc substrate selection and degradation by the ubiquitin-proteasome system. J Biol Chem. 291, 6723–31 (2016)
+11. M´esz´aros, B., Simon, I., Doszt´anyi, Z.: Prediction of protein binding regions in disordered proteins. PLoS Comput Biol. 5(5), 1000376 (2009)12. Doszt´anyi, Z., M´esz´aros, B., Simon, I.: ANCHOR: web server for
+predicting protein binding regions in disordered proteins.
+Bioinformatics 25, 2745–2746 (2009)
+13. Disfani, F.M., Hsu, W.-L., Mizianty, M.J., Oldﬁeld, C.J., Xue, B.,
+Dunker, A.K., Uversky, V.N., Kurgan, L.: MoRFpred, a computational tool for sequence-based prediction and characterization of short disorder-to-order transitioning binding regions in proteins.
+Bioinformatics 28(12), 75–83 (2012)
+14. Fang, C., Noguchi, T., Tominaga, D., Yamana, H.: MFSPSSMpred: identifying short disorder-to-order binding regions in disordered proteins based on contextual local evolutionary conservation. BMC Bioinformatics 14, 300 (2013)
+15. Jones, D.T., Cozzetto, D.: DISOPRED3: Precise disordered region predictions with annotated protein-binding activity. Bioinformatics 31(6), 857–63 (2015)
+16. Lawrence, C.E., Reilly, A.A.: An expectation maximization (EM)
+algorithm for the identiﬁcation and characterization of common sites in unaligned biopolymer sequences. Proteins 7, 41–51 (1990)17. Bailey, T.L., Elkan, C.: The value of prior knowledge in discovering
+motifs with MEME. In: Proc Int Conf Intell Syst Mol Biol, vol. 3, pp.
+21–29. AAAI Press, USA (1995)
+18. M´esz´aros, B., Erd˝os, G., Doszt´anyi, Z.: IUPred2A: context-dependent prediction of protein disorder as a function of redox state and protein binding. Nucleic Acids Res. 46(W1), 329–337 (2018)
+19. Yan, J., Dunker, A.K., Uversky, V.N., Kurgan, L.: Molecular
+recognition features (morfs) in three domains of life. Molecular BioSystems 12, 697–710 (2016)
+20. Liu, J.S., Neuwald, A.F., Lawrence, C.E.: Bayesian models for multiple local sequence alignment and gibbs sampling strategies. J Am Stat Assoc. 90, 1156–1170 (1995)
+21. Narlikar, L., Gordˆan, R., Hartemink, A.J.: Nucleosome occupancy information improves de novo motif discovery. In: Research in Computational Molecular Biology (RECOMB) 2007, LNBI 4453, pp.
+107–121 (2007)
