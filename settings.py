@@ -1,3 +1,5 @@
+#! /Users/tarou/0_project/auto_translate/0_env/bin/python
+
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv

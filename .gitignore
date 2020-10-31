@@ -1,2 +1,4 @@
-env
+0_env
 .env
+.DS_Store
+paper/*

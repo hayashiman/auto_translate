@@ -1,3 +1,5 @@
+#! /Users/tarou/0_project/auto_translate/0_env/bin/python
+
 import argparse
 import requests
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
